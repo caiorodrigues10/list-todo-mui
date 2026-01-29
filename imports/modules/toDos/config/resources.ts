@@ -1,0 +1,6 @@
+export enum Resources {
+	TODO_VIEW = 'TODO_VIEW',
+	TODO_CREATE = 'TODO_CREATE',
+	TODO_UPDATE = 'TODO_UPDATE',
+	TODO_REMOVE = 'TODO_REMOVE'
+}

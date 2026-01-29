@@ -1,0 +1,20 @@
+{
+	"name": "MeteorReactBase-MUI",
+	"short_name": "MRB",
+	"mail_no_reply": "caio.henrique.rodrigues12@gmail.com",
+	"mail_system": "caio.henrique.rodrigues12@gmail.com",
+	"mail_url_smtp": "smtp://caio.henrique.rodrigues12%40gmail.com:yvvvkofyrohldead@smtp.gmail.com:587",
+	"service": "MeteorReactBase-MUI",
+	"settingsGoogle": {
+		"client_secret": "<client_secret>",
+		"client_id": "<client_id>",
+		"validClientIds": ["<client_id>"]
+	},
+	"settingsFacebook": {
+		"appId": "<appId>",
+		"secret": "<secret>"
+	},
+	"maps": {
+		"api": ""
+	}
+}
