@@ -100,7 +100,7 @@ const SysSwitch: React.FC<ISysSwitchProps> = ({
 			tooltipPosition={tooltipPosition}>
 			<FormControlLabel
 				value={labelPosition}
-				label={valueLabel ?? (valueState ? 'Sim' : 'Não')}
+				label={valueLabel ?? (valueState === trueValue ? 'Sim' : 'Não')}
 				control={
 					<Switch
 						{...otherProps}

@@ -77,7 +77,7 @@ export const ToDoDrawer: React.FC<IToDoDrawerProps> = ({
 		setDoc(nextDoc);
 		setDocBeforeEdit(nextDoc);
 		try {
-			toDoApi.update({ _id: doc._id, status: nextStatus } as IToDo);
+			toDoApi.update(nextDoc);
 		} catch (e) {
 			showError('Erro ao atualizar status.');
 		}
@@ -244,6 +244,7 @@ export const ToDoDrawer: React.FC<IToDoDrawerProps> = ({
 											value={doc.type}
 											trueValue="shared"
 											falseValue="personal"
+											disabled={doc.ownerId !== userId}
 											onChange={(e: any) => {
 												const nextType = e.target.value;
 												setDoc({
@@ -255,11 +256,9 @@ export const ToDoDrawer: React.FC<IToDoDrawerProps> = ({
 										/>
 									</Box>
 								)}
-								{doc.type === 'shared' && (
-									<Box sx={{ mt: 1 }}>
-										<SysSelectField name="assigneeId" />
-									</Box>
-								)}
+								<Box sx={{ mt: 1 }}>
+									<SysSelectField name="assigneeId" disabled={doc.ownerId !== userId} />
+								</Box>
 								<Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', justifyContent: 'center', mt: 2 }}>
 									<Button
 										variant={doc.status === EnumToDoStatus.NOT_CONCLUDED ? "contained" : "outlined"}

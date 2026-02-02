@@ -11,7 +11,10 @@ import { userprofileApi } from '/imports/modules/userprofile/api/userProfileApi'
 
 interface IInitialConfig {
 	sortProperties: { field: string; sortAscending: boolean };
-	filter: Object;
+	filter: {
+		searchText?: string;
+		status?: any;
+	};
 	searchBy: string | null;
 	viewComplexTable: boolean;
 	limitPending: number;
@@ -104,7 +107,13 @@ const ToDoListController = () => {
 			...assigneeId,
 			options: () => userOptions,
 			visibilityFunction: (doc: any) => doc.type === 'shared',
-			optional: true
+			optional: true,
+			validationFunction: (value: any, doc: any) => {
+				if (doc?.type === 'shared' && !value) {
+					return 'O responsável é obrigatório para tarefas compartilhadas';
+				}
+				return undefined;
+			}
 		},
 		createdat: { type: Date, label: 'Criado em', optional: true }
 	}), [userOptions]);
@@ -123,24 +132,43 @@ const ToDoListController = () => {
 		totalPending = 0,
 		totalCompleted = 0
 	} = useTracker(() => {
-		const tabFilter = currentTab === '1'
-			? { $or: [{ assigneeId: currentUserId }, { type: 'personal' }] }
-			: { type: 'shared', assigneeId: { $ne: currentUserId } };
+		const shared = currentTab === '2';
+		const publicationFilterPending = {
+			searchText: filter.searchText,
+			shared,
+			sort,
+			limit: config.limitPending + 1
+		};
+		const publicationFilterCompleted = {
+			searchText: filter.searchText,
+			shared,
+			sort,
+			limit: config.limitCompleted + 1
+		};
 
-		const baseFilter = (filter && Object.keys(filter).length > 0)
-			? { $and: [tabFilter, filter] }
-			: tabFilter;
-
-		const filterPending = { ...baseFilter, status: EnumToDoStatus.NOT_CONCLUDED };
-		const filterCompleted = { ...baseFilter, status: EnumToDoStatus.CONCLUDED };
-
-		const subPending = toDoApi.subscribe('toDoListPending', filterPending, { sort, limit: config.limitPending + 1 });
-		const subCompleted = toDoApi.subscribe('toDoListCompleted', filterCompleted, { sort, limit: config.limitCompleted + 1 });
+		const subPending = toDoApi.subscribe('toDoListPending', publicationFilterPending);
+		const subCompleted = toDoApi.subscribe('toDoListCompleted', publicationFilterCompleted);
 
 		const ready = subPending?.ready() && subCompleted?.ready();
 
-		const listPending = ready ? toDoApi.find(filterPending, { sort, limit: config.limitPending + 1 }).fetch() : [];
-		const listCompleted = ready ? toDoApi.find(filterCompleted, { sort, limit: config.limitCompleted + 1 }).fetch() : [];
+		const clientTabFilter = shared
+			? { type: 'shared', assigneeId: { $ne: currentUserId } }
+			: { $or: [{ assigneeId: currentUserId }, { type: 'personal' }] };
+
+		const clientSearchFilter = filter.searchText
+			? {
+					$or: [
+						{ title: { $regex: filter.searchText, $options: 'i' } },
+						{ description: { $regex: filter.searchText, $options: 'i' } }
+					]
+			  }
+			: {};
+
+		const clientFilterPending = { ...clientTabFilter, ...clientSearchFilter, status: EnumToDoStatus.NOT_CONCLUDED };
+		const clientFilterCompleted = { ...clientTabFilter, ...clientSearchFilter, status: EnumToDoStatus.CONCLUDED };
+
+		const listPending = ready ? toDoApi.find(clientFilterPending, { sort, limit: config.limitPending + 1 }).fetch() : [];
+		const listCompleted = ready ? toDoApi.find(clientFilterCompleted, { sort, limit: config.limitCompleted + 1 }).fetch() : [];
 
 		return {
 			pendingTasks: listPending.slice(0, config.limitPending),
@@ -166,7 +194,8 @@ const ToDoListController = () => {
 			const updateData = {
 				...task,
 				status: newStatus,
-				type: task.type || 'personal'
+				type: task.type || 'personal',
+				assigneeId: (task.type === 'personal' || !task.type) ? (task.assigneeId || currentUserId) : task.assigneeId
 			};
 
 			toDoApi.update(updateData, (e: any) => {
@@ -192,7 +221,7 @@ const ToDoListController = () => {
 				message: `Erro ao atualizar a tarefa`
 			});
 		}
-	}, []);
+	}, [currentUserId, showNotification]);
 
 	const onAddButtonClick = useCallback(() => {
 		setShowAddModal(true);
@@ -205,6 +234,8 @@ const ToDoListController = () => {
 	const handleSaveToDo = useCallback((data: { title: string; description: string; type: 'personal' | 'shared'; assigneeId?: string }) => {
 		const newDoc = {
 			...data,
+			type: data.type || 'personal',
+			assigneeId: data.type === 'personal' ? currentUserId : (data.assigneeId || currentUserId),
 			status: EnumToDoStatus.NOT_CONCLUDED,
 			ownerId: currentUserId || 'unknown',
 			date: new Date(),
@@ -253,24 +284,13 @@ const ToDoListController = () => {
 
 	useEffect(() => {
 		const delayedSearch = setTimeout(() => {
-			if (searchText.trim()) {
-				setConfig((prev) => ({
-					...prev,
-					filter: {
-						...prev.filter,
-						$or: [
-							{ title: { $regex: searchText.trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), $options: 'i' } },
-							{ description: { $regex: searchText.trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), $options: 'i' } }
-						]
-					}
-				}));
-			} else {
-				const { $or, ...restFilter } = (config.filter || {}) as any;
-				setConfig((prev) => ({
-					...prev,
-					filter: restFilter
-				}));
-			}
+			setConfig((prev) => ({
+				...prev,
+				filter: {
+					...prev.filter,
+					searchText: searchText.trim() || undefined
+				}
+			}));
 		}, 500);
 
 		return () => clearTimeout(delayedSearch);

@@ -1,10 +1,11 @@
-import React, { createContext, FC, ReactNode, useContext, useEffect, useMemo, useState } from 'react';
 import { useTracker } from 'meteor/react-meteor-data';
-import AuthContext from '/imports/app/authProvider/authContext';
-import { IToDo, toDoSch } from '../../api/toDoSch';
-import { EnumToDoStatus } from '../../api/toDoEnum';
+import React, { createContext, useContext, useEffect, useMemo, useState } from 'react';
 import { toDoApi } from '../../api/toDoApi';
+import { EnumToDoStatus } from '../../api/toDoEnum';
+import { IToDo, toDoSch } from '../../api/toDoSch';
 import AppLayoutContext, { IAppLayoutContext } from '/imports/app/appLayoutProvider/appLayoutContext';
+import AuthContext from '/imports/app/authProvider/authContext';
+import ToDoDashboardView from '/imports/modules/toDos/pages/toDoDashboard/toDoDashboardView';
 import { userprofileApi } from '/imports/modules/userprofile/api/userProfileApi';
 import { ISchema } from '/imports/typings/ISchema';
 
@@ -34,7 +35,7 @@ export const ToDoDashboardControllerContext = createContext<IToDoDashboardContro
   {} as IToDoDashboardControllerContext
 );
 
-const ToDoDashboardControllerProvider: FC<{ children: ReactNode }> = ({ children }) => {
+const ToDoDashboardController = () => {
   const { user } = useContext(AuthContext);
   const { showNotification } = useContext<IAppLayoutContext>(AppLayoutContext);
   const userId = user?._id;
@@ -48,25 +49,38 @@ const ToDoDashboardControllerProvider: FC<{ children: ReactNode }> = ({ children
 
   useEffect(() => {
     if (userId) {
-      toDoApi.callMethod('toDoListCompletedInPeriod', {}, {}, (err: any, res: any) => {
-        if (!err && res) {
-          setStats(res);
-        }
-      });
+      Promise.all([
+        toDoApi.callMethodWithPromise('toDoListCompletedInPeriod', { period: 'week', shared: false }),
+        toDoApi.callMethodWithPromise('toDoListCompletedInPeriod', { period: 'month', shared: false }),
+        toDoApi.callMethodWithPromise('toDoListCompletedInPeriod', { period: 'year', shared: false }),
+        toDoApi.callMethodWithPromise('toDoListCompletedInPeriod', { period: 'week', shared: true }),
+        toDoApi.callMethodWithPromise('toDoListCompletedInPeriod', { period: 'month', shared: true }),
+        toDoApi.callMethodWithPromise('toDoListCompletedInPeriod', { period: 'year', shared: true }),
+      ])
+        .then(([pw, pm, py, tw, tm, ty]) => {
+          setStats({
+            personal: { last7Days: pw, lastMonth: pm, lastYear: py },
+            team: { last7Days: tw, lastMonth: tm, lastYear: ty }
+          });
+        })
+        .catch((err) => {
+          console.error('Erro ao buscar estatísticas:', err);
+        });
     }
   }, [userId]);
 
   const { recentTasks, userOptions, loading } = useTracker(() => {
-    const subRecent = toDoApi.subscribe('toDoRecent', recentFilter, { sort, limit: 5 });
-    const subUsers = userprofileApi.subscribe('userProfileList', {});
-
+    const subRecent = toDoApi.subscribe('toDoRecent');
     const recentTasks = subRecent?.ready()
       ? toDoApi.find(recentFilter, { sort, limit: 5 }).fetch()
       : [];
 
     return {
       recentTasks,
-      userOptions: subUsers.ready() ? userprofileApi.find({}).fetch().map(u => ({ value: (u._id || ''), label: u.username })) : [],
+      userOptions: userprofileApi
+        .find({})
+        .fetch()
+        .map((u) => ({ value: u._id || '', label: u.username })),
       loading: !!subRecent && !subRecent.ready()
     };
   }, [userId]);
@@ -81,7 +95,14 @@ const ToDoDashboardControllerProvider: FC<{ children: ReactNode }> = ({ children
   }), [userOptions]);
 
   const toggleTaskStatus = (task: IToDo, newStatus: EnumToDoStatus) => {
-    toDoApi.update({ ...task, status: newStatus, type: task.type || 'personal' } as IToDo, (e: any) => {
+    const updateData = {
+      ...task,
+      status: newStatus,
+      type: task.type || 'personal',
+      assigneeId: (task.type === 'personal' || !task.type) ? (task.assigneeId || userId) : task.assigneeId
+    };
+
+    toDoApi.update(updateData as IToDo, (e: any) => {
       if (e) {
         showNotification({
           type: 'error',
@@ -129,9 +150,9 @@ const ToDoDashboardControllerProvider: FC<{ children: ReactNode }> = ({ children
 
   return (
     <ToDoDashboardControllerContext.Provider value={providerValue}>
-      {children}
+      <ToDoDashboardView />
     </ToDoDashboardControllerContext.Provider>
   );
 };
 
-export default ToDoDashboardControllerProvider;
+export default ToDoDashboardController;

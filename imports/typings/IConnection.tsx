@@ -1,7 +1,7 @@
 export interface IConnection {
 	id: string;
 	close: () => any;
-	onClose: () => any;
+	onClose: (callback: any) => any;
 	clientAddress: string;
 	httpHeaders: {
 		'x-forwarded-for': string;

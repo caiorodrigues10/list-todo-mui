@@ -35,7 +35,7 @@ export const toDoSch: ISchema<IToDo> = {
 		type: String,
 		label: 'Tipo',
 		defaultValue: 'personal',
-		optional: false,
+		optional: true,
 		options: () => [
 			{ value: 'personal', label: 'Pessoal' },
 			{ value: 'shared', label: 'Compartilhado' }
@@ -45,13 +45,14 @@ export const toDoSch: ISchema<IToDo> = {
 		type: String,
 		label: 'ID do proprietário',
 		defaultValue: '',
-		optional: false
+		optional: true
 	},
 	assigneeId: {
 		type: String,
 		label: 'Responsável',
 		defaultValue: '',
-		optional: true
+		optional: true,
+		visibilityFunction: (doc: any) => doc.type === 'shared'
 	},
 	teamId: {
 		type: String,

@@ -32,13 +32,19 @@ export const ToDoAddModalStyles = {
   })),
   SaveButton: styled(Button)(({ theme }) => ({
     width: '200px',
-    backgroundColor: '#bdbdbd',
-    color: '#000',
+    backgroundColor: theme.palette.primary.main,
+    color: theme.palette.primary.contrastText,
     '&:hover': {
-      backgroundColor: '#9e9e9e',
+      backgroundColor: theme.palette.primary.dark,
+    },
+    '&:disabled': {
+      backgroundColor: theme.palette.grey[300],
+      color: theme.palette.grey[500],
     },
     textTransform: 'none',
     fontWeight: 'bold',
+    borderRadius: '12px',
+    padding: theme.spacing(1.5, 0),
     boxShadow: 'none',
   })),
 };

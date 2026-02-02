@@ -1,23 +1,14 @@
-import Home from '../../sysPages/pages/home/home';
-import SignUpPage from '../../sysPages/pages/signUp/signUp';
-import { EmailVerify } from '../../sysPages/pages/emailVerify/emailVerify';
-import { ResetPassword } from '../../sysPages/pages/resetPassword/resetPassword';
-import { PasswordRecovery } from '../../sysPages/pages/recoveryPassword/passwordRecovery';
 import { IRoute } from '../../modules/modulesTypings';
+import { EmailVerify } from '../../sysPages/pages/emailVerify/emailVerify';
 import { NoPermission } from '../../sysPages/pages/noPermission/noPermission';
-import SignInPage from '../pages/signIn/signIn';
-import { HomeResources, SysFormTestPageResources } from './resources';
+import { PasswordRecovery } from '../../sysPages/pages/recoveryPassword/passwordRecovery';
+import { ResetPassword } from '../../sysPages/pages/resetPassword/resetPassword';
+import SignUpPage from '../../sysPages/pages/signUp/signUp';
 import SysFormPlayground from '../../sysPages/pages/sysFormPlayground/sysFormPlayground';
-import VerifyCode from '../../sysPages/pages/verifyCode/verifyCode';
+import SignInPage from '../pages/signIn/signIn';
+import { SysFormTestPageResources } from './resources';
 
 export const pagesRouterList: (IRoute | null)[] = [
-	{
-		path: '/',
-		exact: true,
-		component: Home,
-		isProtected: true,
-		resources: [HomeResources.HOME_VIEW]
-	},
 	{
 		path: '/sysFormTests',
 		component: SysFormPlayground,

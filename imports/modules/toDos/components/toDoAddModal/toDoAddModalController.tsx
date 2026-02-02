@@ -22,7 +22,7 @@ interface IToDoAddModalControllerContext {
   assigneeId: string;
   setAssigneeId: (value: string) => void;
   userOptions: { value: string; label: string }[];
-  errors: { title?: string };
+  errors: { title?: string; assigneeId?: string };
   handleSave: () => void;
 }
 
@@ -38,11 +38,12 @@ export const ToDoAddModalController: React.FC<IToDoAddModalProps> = ({ open, onC
   const [description, setDescription] = useState('');
   const [type, setType] = useState('personal');
   const [assigneeId, setAssigneeId] = useState('');
-  const [errors, setErrors] = useState<{ title?: string }>({});
+  const [errors, setErrors] = useState<{ title?: string; assigneeId?: string }>({});
 
   const validate = () => {
-    const newErrors: { title?: string } = {};
+    const newErrors: { title?: string; assigneeId?: string } = {};
     if (!title.trim()) newErrors.title = 'Título é obrigatório';
+    if (type === 'shared' && !assigneeId) newErrors.assigneeId = 'O responsável é obrigatório para tarefas compartilhadas';
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -72,6 +73,14 @@ export const ToDoAddModalController: React.FC<IToDoAddModalProps> = ({ open, onC
     resetForm();
   };
 
+  const handleTypeChange = (value: string) => {
+    setType(value);
+    if (value === 'personal') {
+      setAssigneeId('');
+      setErrors((prev) => ({ ...prev, assigneeId: undefined }));
+    }
+  };
+
   const providerValue = {
     open,
     onClose: handleCloseInternal,
@@ -81,7 +90,7 @@ export const ToDoAddModalController: React.FC<IToDoAddModalProps> = ({ open, onC
     description,
     setDescription,
     type,
-    setType,
+    setType: handleTypeChange,
     assigneeId,
     setAssigneeId,
     userOptions,

@@ -1,12 +1,20 @@
-import { Resources } from './resources';
 import { IRoute } from '../../modulesTypings';
-import todoContainer from '../toDoContainer';
+import ToDoDashboardController from '../pages/toDoDashboard/toDoDashboardController';
+import { Resources } from './resources';
+import ToDoListController from '../pages/toDoList/toDoListController';
 
 export const toDoRouterList: (IRoute | null)[] = [
 	{
 		path: '/todo',
-		component: todoContainer,
+		component: ToDoListController,
 		isProtected: true,
 		resources: [Resources.TODO_VIEW]
+	},
+	{
+		path: '/',
+		exact: true,
+		component: ToDoDashboardController,
+		isProtected: true,
+		resources: [Resources.TODO_DASHBOARD]
 	}
 ];

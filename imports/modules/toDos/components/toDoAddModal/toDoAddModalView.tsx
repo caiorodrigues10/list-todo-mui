@@ -106,6 +106,8 @@ export const ToDoAddModalView: React.FC = () => {
                 fullWidth
                 value={assigneeId}
                 onChange={(e) => setAssigneeId(e.target.value)}
+                error={!!errors.assigneeId}
+                helperText={errors.assigneeId}
                 variant="outlined"
                 inputProps={{ 'aria-label': 'Responsável pela tarefa' }}
               >
@@ -121,7 +123,11 @@ export const ToDoAddModalView: React.FC = () => {
       </Content>
 
       <Actions>
-        <SaveButton onClick={handleSave} variant="contained">
+        <SaveButton
+          onClick={handleSave}
+          variant="contained"
+          disabled={!title.trim() || (type === 'shared' && !assigneeId)}
+        >
           Salvar
         </SaveButton>
       </Actions>

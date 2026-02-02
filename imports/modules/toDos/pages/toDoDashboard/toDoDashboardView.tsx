@@ -54,6 +54,7 @@ const ToDoDashboardView = () => {
 	};
 
 	return (
+		<Box sx={{ width: '100%' }}>
 		<Container>
 			<Box>
 				<Greeting variant="h1">Olá, {userName}</Greeting>
@@ -104,6 +105,7 @@ const ToDoDashboardView = () => {
         sx={{ color: 'black', backgroundColor: (theme) => theme.palette.grey[400], '&:hover': { backgroundColor: (theme) => theme.palette.grey[500] } }}
 			/>
 		</Container>
+		</Box>
 	);
 };
 
